@@ -6,10 +6,10 @@ import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { ArrowLeft, MessageSquare, Sparkles, Flame } from 'lucide-react';
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import { ArrowLeft, Sparkles, Flame } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import AIChatDrawer from '@/components/AIChatDrawer';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -148,94 +148,104 @@ export default function DomainPage() {
       </div>
 
       {/* Questions */}
-      <div className="py-4 pb-20" data-testid="questions-list">
+      <div className="space-y-6 py-6 pb-20" data-testid="questions-list">
         {filteredQuestions.length === 0 ? (
           <p className="py-12 text-center text-sm text-muted-foreground">
             No questions match the current filters.
           </p>
         ) : (
-          <Accordion type="single" collapsible className="space-y-2">
-            {filteredQuestions.map(q => (
-              <AccordionItem
-                key={q.id}
-                value={q.id}
-                data-testid={`question-item-${q.id}`}
-                className="rounded-sm border border-border bg-card px-4 transition-colors hover:border-foreground/10"
-              >
-                <AccordionTrigger
-                  data-testid={`question-trigger-${q.id}`}
-                  className="py-4 text-left text-sm font-medium hover:no-underline"
-                >
-                  <div className="flex flex-1 items-start gap-3 pr-2">
-                    <span className="flex-1">{q.question}</span>
-                    <div className="flex shrink-0 items-center gap-1.5">
-                      {q.is_most_asked && (
-                        <Flame className="h-3 w-3 text-amber-500" />
-                      )}
-                      <Badge
-                        variant="outline"
-                        className={`rounded-sm text-[10px] capitalize ${difficultyColors[q.difficulty] || ''}`}
-                      >
-                        {q.difficulty}
-                      </Badge>
-                    </div>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="pb-4">
-                  <div className="markdown-content text-sm leading-relaxed text-foreground/90">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        code({ node, inline, className, children, ...props }) {
-                          const match = /language-(\w+)/.exec(className || '');
-                          return !inline && match ? (
-                            <SyntaxHighlighter
-                              style={codeStyle}
-                              language={match[1]}
-                              PreTag="div"
-                              className="syntax-highlighter !rounded-sm !text-xs"
-                              {...props}
-                            >
-                              {String(children).replace(/\n$/, '')}
-                            </SyntaxHighlighter>
-                          ) : (
-                            <code className="rounded-sm bg-muted px-1.5 py-0.5 text-xs font-mono" {...props}>
-                              {children}
-                            </code>
-                          );
-                        }
-                      }}
-                    >
-                      {q.answer}
-                    </ReactMarkdown>
-                  </div>
-                  {/* Tags */}
-                  {q.tags && q.tags.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-1.5">
-                      {q.tags.map(tag => (
-                        <Badge key={tag} variant="secondary" className="rounded-sm text-[10px] font-mono">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
+          filteredQuestions.map((q, idx) => (
+            <article
+              key={q.id}
+              data-testid={`question-item-${q.id}`}
+              className={`rounded-sm border border-border bg-card animate-fade-in-up stagger-${Math.min(idx + 1, 6)}`}
+              style={{ opacity: 0 }}
+            >
+              {/* Question header */}
+              <div className="flex items-start justify-between gap-3 px-6 pt-6 pb-3">
+                <div className="flex items-start gap-3">
+                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-sm bg-muted text-[10px] font-bold font-mono text-muted-foreground">
+                    {idx + 1}
+                  </span>
+                  <h3
+                    data-testid={`question-title-${q.id}`}
+                    className="text-sm font-semibold leading-snug tracking-tight"
+                  >
+                    {q.question}
+                  </h3>
+                </div>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {q.is_most_asked && (
+                    <Flame className="h-3 w-3 text-amber-500" />
                   )}
-                  {/* Ask AI button */}
-                  <div className="mt-4 border-t border-border pt-3">
-                    <Button
-                      data-testid={`ask-ai-btn-${q.id}`}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openChat(q)}
-                      className="h-8 gap-1.5 rounded-sm text-xs"
-                    >
-                      <Sparkles className="h-3 w-3" />
-                      Ask AI about this question
-                    </Button>
+                  <Badge
+                    variant="outline"
+                    className={`rounded-sm text-[10px] capitalize ${difficultyColors[q.difficulty] || ''}`}
+                  >
+                    {q.difficulty}
+                  </Badge>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Answer - always visible */}
+              <div className="px-6 py-5">
+                <div className="markdown-content text-sm leading-relaxed text-foreground/90">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      code({ node, inline, className, children, ...props }) {
+                        const match = /language-(\w+)/.exec(className || '');
+                        return !inline && match ? (
+                          <SyntaxHighlighter
+                            style={codeStyle}
+                            language={match[1]}
+                            PreTag="div"
+                            className="syntax-highlighter !rounded-sm !text-xs"
+                            {...props}
+                          >
+                            {String(children).replace(/\n$/, '')}
+                          </SyntaxHighlighter>
+                        ) : (
+                          <code className="rounded-sm bg-muted px-1.5 py-0.5 text-xs font-mono" {...props}>
+                            {children}
+                          </code>
+                        );
+                      }
+                    }}
+                  >
+                    {q.answer}
+                  </ReactMarkdown>
+                </div>
+
+                {/* Tags */}
+                {q.tags && q.tags.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {q.tags.map(tag => (
+                      <Badge key={tag} variant="secondary" className="rounded-sm text-[10px] font-mono">
+                        {tag}
+                      </Badge>
+                    ))}
                   </div>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+                )}
+              </div>
+
+              {/* Footer - Ask AI */}
+              <div className="border-t border-border px-6 py-3">
+                <Button
+                  data-testid={`ask-ai-btn-${q.id}`}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openChat(q)}
+                  className="h-8 gap-1.5 rounded-sm text-xs"
+                >
+                  <Sparkles className="h-3 w-3" />
+                  Ask AI about this question
+                </Button>
+              </div>
+            </article>
+          ))
         )}
       </div>
 
