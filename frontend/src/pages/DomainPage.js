@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { ArrowLeft, Sparkles, Flame } from 'lucide-react';
+import { ArrowLeft, ArrowUp, Sparkles, Flame } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -32,6 +32,17 @@ export default function DomainPage() {
   const [loading, setLoading] = useState(true);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatQuestion, setChatQuestion] = useState(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShowScrollTop(window.scrollY > 400);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -113,10 +124,10 @@ export default function DomainPage() {
         </span>
       </div>
 
-      {/* Filters */}
+      {/* Filters - sticky */}
       <div
         data-testid="filter-bar"
-        className="flex flex-wrap items-center gap-2 border-b border-border pb-4"
+        className="sticky top-14 z-20 -mx-4 flex flex-wrap items-center gap-2 border-b border-border bg-background/80 px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6"
       >
         {DIFFICULTIES.map(d => (
           <button
@@ -248,6 +259,18 @@ export default function DomainPage() {
           ))
         )}
       </div>
+
+      {/* Scroll to top */}
+      {showScrollTop && (
+        <button
+          data-testid="scroll-to-top-btn"
+          onClick={scrollToTop}
+          className="fixed bottom-6 left-6 z-30 flex h-10 w-10 items-center justify-center rounded-sm border border-border bg-card shadow-lg transition-all hover:bg-foreground hover:text-background"
+          aria-label="Scroll to top"
+        >
+          <ArrowUp className="h-4 w-4" />
+        </button>
+      )}
 
       {/* AI Chat Drawer */}
       <AIChatDrawer
