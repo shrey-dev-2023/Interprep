@@ -347,6 +347,22 @@ async def search(q: str = ""):
     questions = await db.questions.find({"$or": [{"question": regex}, {"tags": regex}]}, {"_id": 0}).to_list(20)
     return {"domains": domains, "questions": questions}
 
+# --- Question of the Day ---
+@api_router.get("/question-of-the-day")
+async def question_of_the_day():
+    import hashlib
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    all_questions = await db.questions.find({"is_most_asked": True}, {"_id": 0}).to_list(500)
+    if not all_questions:
+        all_questions = await db.questions.find({}, {"_id": 0}).to_list(500)
+    if not all_questions:
+        return None
+    seed = int(hashlib.md5(today.encode()).hexdigest(), 16)
+    idx = seed % len(all_questions)
+    question = all_questions[idx]
+    domain = await db.domains.find_one({"id": question["domain_id"]}, {"_id": 0})
+    return {"question": question, "domain": domain}
+
 # Include router
 app.include_router(api_router)
 

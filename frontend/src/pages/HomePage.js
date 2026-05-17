@@ -1,9 +1,17 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Search, ArrowRight, Code2, Database, Server, Braces, Terminal, Layers, Sparkles } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { Search, ArrowRight, Code2, Database, Server, Braces, Terminal, Layers, Sparkles, Flame, Calendar } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -25,6 +33,12 @@ const domainAccents = {
   'system-design': { bg: 'bg-rose-500/8', text: 'text-rose-600', border: 'border-rose-500/15' },
 };
 
+const difficultyColors = {
+  easy: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+  medium: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+  hard: 'bg-red-500/10 text-red-600 border-red-500/20',
+};
+
 const CODE_LINES = [
   { num: '01', code: 'function prepare(topic) {', cls: 'text-foreground' },
   { num: '02', code: '  const knowledge = study(topic);', cls: 'text-muted-foreground' },
@@ -34,16 +48,19 @@ const CODE_LINES = [
 ];
 
 export default function HomePage() {
+  const { theme } = useTheme();
   const [domains, setDomains] = useState([]);
   const [search, setSearch] = useState('');
   const [searchResults, setSearchResults] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [qotd, setQotd] = useState(null);
 
   useEffect(() => {
     axios.get(`${API}/domains`).then(r => {
       setDomains(r.data);
       setLoading(false);
     }).catch(() => setLoading(false));
+    axios.get(`${API}/question-of-the-day`).then(r => setQotd(r.data)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -164,6 +181,112 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Question of the Day */}
+      {qotd && qotd.question && (
+        <section className="border-b border-border" data-testid="qotd-section">
+          <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+            <div className="mb-5 flex items-center gap-2.5">
+              <div className="flex h-7 w-7 items-center justify-center rounded-sm bg-amber-500/10 border border-amber-500/15">
+                <Calendar className="h-3.5 w-3.5 text-amber-600" />
+              </div>
+              <div>
+                <span
+                  className="text-sm font-semibold tracking-tight"
+                  style={{ fontFamily: "'Cabinet Grotesk', sans-serif" }}
+                >
+                  Question of the Day
+                </span>
+                <span className="ml-2 text-[10px] font-mono text-muted-foreground">
+                  {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </span>
+              </div>
+            </div>
+
+            <div className="rounded-sm border border-border bg-card">
+              {/* QOTD Header */}
+              <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-3">
+                <h3 className="text-sm font-semibold leading-snug tracking-tight">
+                  {qotd.question.question}
+                </h3>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {qotd.question.is_most_asked && <Flame className="h-3 w-3 text-amber-500" />}
+                  <Badge
+                    variant="outline"
+                    className={`rounded-sm text-[10px] capitalize ${difficultyColors[qotd.question.difficulty] || ''}`}
+                  >
+                    {qotd.question.difficulty}
+                  </Badge>
+                  {qotd.domain && (
+                    <Badge variant="secondary" className="rounded-sm text-[10px]">
+                      {qotd.domain.name}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* QOTD Answer preview */}
+              <div className="px-6 py-5">
+                <div className="markdown-content text-sm leading-relaxed text-foreground/90">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      code({ node, inline, className, children, ...props }) {
+                        const match = /language-(\w+)/.exec(className || '');
+                        return !inline && match ? (
+                          <SyntaxHighlighter
+                            style={theme === 'dark' ? oneDark : oneLight}
+                            language={match[1]}
+                            PreTag="div"
+                            className="syntax-highlighter !rounded-sm !text-xs"
+                            {...props}
+                          >
+                            {String(children).replace(/\n$/, '')}
+                          </SyntaxHighlighter>
+                        ) : (
+                          <code className="rounded-sm bg-muted px-1.5 py-0.5 text-xs font-mono" {...props}>
+                            {children}
+                          </code>
+                        );
+                      }
+                    }}
+                  >
+                    {qotd.question.answer}
+                  </ReactMarkdown>
+                </div>
+                {qotd.question.tags && qotd.question.tags.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {qotd.question.tags.map(tag => (
+                      <Badge key={tag} variant="secondary" className="rounded-sm text-[10px] font-mono">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* QOTD Footer */}
+              {qotd.domain && (
+                <div className="border-t border-border px-6 py-3">
+                  <Link to={`/domain/${qotd.domain.slug}`}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      data-testid="qotd-explore-btn"
+                      className="h-8 gap-1.5 rounded-sm text-xs"
+                    >
+                      Explore more {qotd.domain.name} questions
+                      <ArrowRight className="h-3 w-3" />
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Domains section */}
       <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
