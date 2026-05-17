@@ -153,9 +153,11 @@ def slugify(text):
 @api_router.get("/domains")
 async def get_domains():
     domains = await db.domains.find({}, {"_id": 0}).to_list(100)
-    # Attach question counts
+    # Single aggregation query for all counts
+    pipeline = [{"$group": {"_id": "$domain_id", "count": {"$sum": 1}}}]
+    counts = {item["_id"]: item["count"] for item in await db.questions.aggregate(pipeline).to_list(100)}
     for d in domains:
-        d["question_count"] = await db.questions.count_documents({"domain_id": d["id"]})
+        d["question_count"] = counts.get(d["id"], 0)
     return domains
 
 @api_router.get("/domains/{slug}")
