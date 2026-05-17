@@ -18,34 +18,69 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   const checkAuth = useCallback(async () => {
-    try {
-      const { data } = await axios.get(`${API}/auth/me`);
-      setUser(data);
-    } catch {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
       setUser(false);
-    } finally {
       setLoading(false);
+      return;
     }
-  }, []);
+
+    axios.defaults.headers.common[
+      "Authorization"
+    ] = `Bearer ${token}`;
+
+    const { data } = await axios.get(`${API}/auth/me`);
+
+    setUser(data);
+  } catch {
+    localStorage.removeItem("token");
+    setUser(false);
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   useEffect(() => { checkAuth(); }, [checkAuth]);
 
   const login = async (email, password) => {
-    try {
-      const { data } = await axios.post(`${API}/auth/login`, { email, password });
-      setUser(data);
-      return { success: true };
-    } catch (e) {
-      return { success: false, error: formatApiErrorDetail(e.response?.data?.detail) || e.message };
-    }
-  };
+  try {
+    const { data } = await axios.post(
+      `${API}/auth/login`,
+      { email, password }
+    );
+
+    // Store JWT token
+    localStorage.setItem("token", data.token);
+
+    // Attach token to future requests
+    axios.defaults.headers.common[
+      "Authorization"
+    ] = `Bearer ${data.token}`;
+
+    setUser(data);
+
+    return { success: true };
+  } catch (e) {
+    return {
+      success: false,
+      error:
+        formatApiErrorDetail(e.response?.data?.detail) ||
+        e.message
+    };
+  }
+};
 
   const logout = async () => {
     try {
       await axios.post(`${API}/auth/logout`, {});
     } catch {}
-    setUser(false);
-  };
+localStorage.removeItem("token");
+
+delete axios.defaults.headers.common["Authorization"];
+
+setUser(false);  };
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout }}>
