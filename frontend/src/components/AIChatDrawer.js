@@ -32,7 +32,7 @@ export default function AIChatDrawer({ open, onOpenChange, question }) {
       setSessionId(null);
       setInput('');
     }
-  }, [question?.id]);
+  }, [question]);
 
   useEffect(() => {
     if (open && inputRef.current) {
