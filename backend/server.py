@@ -8,7 +8,6 @@ from fastapi import FastAPI, APIRouter, HTTPException, Request, Response
 from fastapi.responses import StreamingResponse
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
-from emergentintegrations.llm.chat import LlmChat, UserMessage
 import os
 import logging
 import bcrypt
@@ -20,11 +19,14 @@ from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 from bson import ObjectId
+from openai import AsyncOpenAI
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
+
+openai_client = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
@@ -265,7 +267,7 @@ async def delete_question(question_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Question not found")
     return {"message": "Question deleted"}
 
-# --- AI Chat Route ---
+# --- AI Chat Route (Native OpenAI Migration) ---
 @api_router.post("/chat")
 async def chat_endpoint(req: ChatRequest):
     session_id = req.session_id or str(uuid.uuid4())
@@ -282,42 +284,58 @@ RULES:
 4. Use markdown formatting for readability.
 5. Be encouraging and supportive."""
 
-    # Get chat history from DB
+    # 1. Fetch historical message logs from MongoDB
     chat_doc = await db.chat_history.find_one({"session_id": session_id}, {"_id": 0})
     history_messages = []
     if chat_doc and chat_doc.get("messages"):
-        history_messages = chat_doc["messages"][-10:]  # Last 10 messages for context
+        # Take the last 10 messages to keep within payload/context limits
+        history_messages = chat_doc["messages"][-10:]
+
+    # 2. Reconstruct payload structure matching standard OpenAI roles API
+    openai_messages = [{"role": "system", "content": system_message}]
+    
+    # Append loaded conversation timeline logs
+    for msg in history_messages:
+        openai_messages.append({
+            "role": msg["role"],
+            "content": msg["content"]
+        })
+        
+    # Append the new message the user just typed
+    openai_messages.append({"role": "user", "content": req.user_message})
 
     try:
-        chat = LlmChat(
-            api_key=os.environ.get("EMERGENT_LLM_KEY"),
-            session_id=session_id,
-            system_message=system_message
+        # 3. Call OpenAI using your initialized async instance 
+        response = await openai_client.chat.completions.create(
+            model="gpt-4o",  # Standard choice for advanced engineering coaching
+            messages=openai_messages,
+            temperature=0.7
         )
-        chat.with_model("openai", "gpt-5.2")
+        
+        response_text = response.choices[0].message.content
 
-        # Add history to context
-        for msg in history_messages:
-            if msg["role"] == "user":
-                await chat.send_message(UserMessage(text=msg["content"]))
-
-        user_msg = UserMessage(text=req.user_message)
-        response_text = await chat.send_message(user_msg)
-
-        # Save to chat history
+        # 4. Save entire execution trace back down to MongoDB
         new_messages = history_messages + [
             {"role": "user", "content": req.user_message},
             {"role": "assistant", "content": response_text}
         ]
+        
         await db.chat_history.update_one(
             {"session_id": session_id},
-            {"$set": {"session_id": session_id, "messages": new_messages, "updated_at": datetime.now(timezone.utc).isoformat()}},
+            {
+                "$set": {
+                    "session_id": session_id, 
+                    "messages": new_messages, 
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+            },
             upsert=True
         )
 
         return {"response": response_text, "session_id": session_id}
+        
     except Exception as e:
-        logger.error(f"AI Chat error: {e}")
+        logger.error(f"Native AI Chat Error: {e}")
         raise HTTPException(status_code=500, detail="AI service temporarily unavailable. Please try again.")
 
 # --- Admin Analytics ---
