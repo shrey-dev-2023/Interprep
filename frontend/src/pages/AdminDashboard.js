@@ -54,7 +54,7 @@ export default function AdminDashboard() {
   const [questionSaving, setQuestionSaving] = useState(false);
 
   const axiosAuth = useCallback(() => {
-    return { withCredentials: true };
+    return {};
   }, []);
 
   const fetchAll = useCallback(async () => {

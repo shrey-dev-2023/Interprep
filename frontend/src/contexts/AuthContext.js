@@ -19,7 +19,7 @@ export function AuthProvider({ children }) {
 
   const checkAuth = useCallback(async () => {
     try {
-      const { data } = await axios.get(`${API}/auth/me`, { withCredentials: true });
+      const { data } = await axios.get(`${API}/auth/me`);
       setUser(data);
     } catch {
       setUser(false);
@@ -32,7 +32,7 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     try {
-      const { data } = await axios.post(`${API}/auth/login`, { email, password }, { withCredentials: true });
+      const { data } = await axios.post(`${API}/auth/login`, { email, password });
       setUser(data);
       return { success: true };
     } catch (e) {
@@ -42,7 +42,7 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      await axios.post(`${API}/auth/logout`, {}, { withCredentials: true });
+      await axios.post(`${API}/auth/logout`, {});
     } catch {}
     setUser(false);
   };
