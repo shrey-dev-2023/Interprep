@@ -145,8 +145,8 @@ async def login(req: LoginRequest, response: Response):
     user_id = str(user["_id"])
     access_token = create_access_token(user_id, email)
     refresh_token = create_refresh_token(user_id)
-    response.set_cookie(key="access_token", value=access_token, httponly=True, secure=False, samesite="lax", max_age=3600, path="/")
-    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True, secure=False, samesite="lax", max_age=604800, path="/")
+    response.set_cookie(key="access_token", value=access_token, httponly=True, secure=True, samesite="lax", max_age=3600, path="/")
+    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True, secure=True, samesite="lax", max_age=604800, path="/")
     return {"id": user_id, "email": user["email"], "name": user.get("name", ""), "role": user.get("role", "user"), "token": access_token}
 
 @api_router.get("/auth/me")
@@ -401,13 +401,7 @@ async def question_of_the_day():
 # Include router
 app.include_router(api_router)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
