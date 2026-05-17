@@ -1,0 +1,91 @@
+{
+  "theme_and_archetype": {
+    "domain": "Education/Preparation",
+    "theme": "Tri-mode (Light, Dark, Warm)",
+    "archetype": "Archetype 4 (Swiss & High-Contrast) with Archetype 1 (Organic & Earthy) for Warm Mode",
+    "vibe": "Clean, minimalist, authoritative, professional, focused, and accessible."
+  },
+  "typography": {
+    "headings": {
+      "font": "Cabinet Grotesk",
+      "style": "tracking-tight, leading-none, bold or black weight depending on context. Banned: Inter, Roboto.",
+      "max_size": "text-5xl for hero, text-4xl for section headers. Never go beyond text-5xl."
+    },
+    "body": {
+      "font": "Satoshi",
+      "style": "tracking-normal, leading-relaxed, text-base. High legibility."
+    },
+    "code_and_technical": {
+      "font": "JetBrains Mono",
+      "style": "tracking-tight, text-sm. Use for all code blocks, labels, metadata, and admin grids."
+    }
+  },
+  "color_palette": {
+    "light_mode": {
+      "background": "#FAFAFA",
+      "foreground": "#0A0A0A",
+      "card": "#FFFFFF",
+      "primary": "#171717",
+      "border": "#E5E5E5",
+      "muted": "#737373"
+    },
+    "dark_mode": {
+      "background": "#09090B",
+      "foreground": "#FAFAFA",
+      "card": "#18181B",
+      "primary": "#FFFFFF",
+      "border": "#27272A",
+      "muted": "#A1A1AA"
+    },
+    "warm_mode": {
+      "background": "#F5EFE6",
+      "foreground": "#3B352B",
+      "card": "#F0E8DD",
+      "primary": "#2D261C",
+      "border": "#E3D5C5",
+      "muted": "#8A7E6E",
+      "accent": "#B65E34"
+    }
+  },
+  "layout_and_spacing": {
+    "generous_spacing": "Use p-8 to p-12 inside cards and sections. Provide massive breathing room. Containers with borders must have internal padding.",
+    "grids": "Use 'Bento' or 'Control Room' grid strategies. Mobile-first grid-cols-1, scaling to grid-cols-12 for complex landing layouts.",
+    "border_strategy": "1px crisp lines. 'Grid Borders' surface strategy where components reveal the structure of the layout. Minimal use of box-shadows. Use subtle inner glow if needed."
+  },
+  "component_guidelines": {
+    "landing_page": "Hero section features bold Cabinet Grotesk typography over an abstract structural background. Heavy emphasis on a massive, elegant search bar. Use a 'Bento' grid layout for interview domains.",
+    "domain_page": "Filter tabs should use un-rounded or slightly rounded (rounded-sm) buttons. High contrast active states. Clear visual hierarchy.",
+    "qa_interface": "Use Shadcn Accordion but strip all default rounding (rounded-none or rounded-sm). Use 1px solid borders separating questions. Content inside should heavily feature JetBrains Mono for syntax highlighting.",
+    "ai_chatbot": "Shadcn Sheet component as a slide-out drawer. Must render Markdown correctly. Typography must remain tight and highly readable. Ensure streaming updates are visually anchored.",
+    "admin_panel": "Dense 'Control Room' grid. Pure functionality. Use Shadcn Table with compact padding (p-2 to p-4). Monochrome data visualization with JetBrains Mono."
+  },
+  "media": {
+    "hero_dark_grid": {
+      "url": "https://static.prod-images.emergentagent.com/jobs/528139d0-8944-41cb-a643-1a4d1ff5ba5c/images/92addcdabfb637f5c1b9255ca1c559e23a466203ad359b46e6f44bff04c8ce8c.png",
+      "description": "Architectural grid lines. Use as a background for Dark Mode hero or admin sections (low opacity)."
+    },
+    "hero_warm_texture": {
+      "url": "https://static.prod-images.emergentagent.com/jobs/528139d0-8944-41cb-a643-1a4d1ff5ba5c/images/c08876c5cd8a025f96f3c1c002e78d04ab311b8e045216988ef121d98ef9ae24.png",
+      "description": "Frosted glass and raw stone texture. Use for Warm Mode hero background or visual accents."
+    },
+    "structural_architecture": {
+      "url": "https://images.unsplash.com/photo-1576831371356-d6e9411ae501?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTV8MHwxfHNlYXJjaHwyfHxtaW5pbWFsaXN0JTIwYXJjaGl0ZWN0dXJlJTIwbGluZXN8ZW58MHx8fHwxNzc4OTk0NDI5fDA&ixlib=rb-4.1.0&q=85",
+      "description": "Abstract architecture lines. Ideal for Light Mode hero or category thumbnails."
+    }
+  },
+  "icons": {
+    "library": "@phosphor-icons/react",
+    "style": "Use regular or light weight for a clean, minimal look. Avoid heavy/filled icons unless active."
+  },
+  "instructions_to_main_agent": [
+    "Implement tri-mode theming. In globals.css, set up :root (light), .dark, and .warm CSS variables mapping to Tailwind colors. Use next-themes or a context provider to toggle the HTML class.",
+    "Install `@phosphor-icons/react` for iconography. Do not use generic emoji or font-awesome.",
+    "Install `react-syntax-highlighter` and `react-markdown` for the Q&A and Chatbot code rendering.",
+    "Use standard JS/JSX. No TypeScript (.tsx). Use Javascript for Shadcn components.",
+    "Do NOT use raw HTML inputs for complex forms; rely on customized Shadcn primitives. Strip away any 'Vercel-look' default styling (heavy shadows/roundings).",
+    "Every interactive or informational element MUST include a `data-testid` attribute (e.g., `data-testid='theme-toggle-warm'`).",
+    "Avoid generic Tailwind roundings (e.g., rounded-2xl). Keep components sharp (rounded-none) or very subtle (rounded-sm) to match the Swiss minimalist aesthetic.",
+    "Ensure hover states explicitly define text colors (e.g., hover:bg-black hover:text-white). Focus states must be highly visible.",
+    "The header must have a solid or glassmorphism background (backdrop-blur-xl). Never fully transparent over content."
+  ]
+}
