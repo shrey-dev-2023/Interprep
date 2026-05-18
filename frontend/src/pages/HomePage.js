@@ -356,24 +356,6 @@ export default function HomePage() {
           </div>
         )}
       </section>
-
-      {/* Bottom CTA */}
-      <section className="border-t border-border">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-8 sm:px-6">
-          <div>
-            <p className="text-sm font-medium">Are you the admin?</p>
-            <p className="text-xs text-muted-foreground">Manage domains and questions from the dashboard.</p>
-          </div>
-          <Link to="/admin/login">
-            <button
-              data-testid="admin-login-cta"
-              className="rounded-sm border border-border bg-card px-4 py-2 text-xs font-medium text-muted-foreground transition-all hover:border-foreground/30 hover:text-foreground"
-            >
-              Admin Login
-            </button>
-          </Link>
-        </div>
-      </section>
     </div>
   );
 }
